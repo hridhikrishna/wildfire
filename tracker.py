@@ -2,7 +2,6 @@ from datetime import datetime
 from io import StringIO
 import os
 import pandas as pd
-git
 import requests
 
 # 1. Configuration & Security
@@ -24,10 +23,10 @@ try:
   df = pd.read_csv(StringIO(response.text))
 
   # 2. Generate Interactive Map using Folium
-  # Center map over Wayanad
+  import folium
+
   wayanad_map = folium.Map(location=[11.6854, 76.1320], zoom_start=11)
 
-  # Add a tile layer for satellite view (optional, makes it look like a real monitoring center)
   folium.TileLayer(
       tiles="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       attr="OpenStreetMap",
@@ -39,7 +38,6 @@ try:
         "No thermal anomalies or fire detections found in Wayanad for this"
         " timeframe."
     )
-    # Create an empty indicator map
     folium.Marker(
         [11.6854, 76.1320],
         popup="<b>Status:</b> No active anomalies detected in the last 24h.",
