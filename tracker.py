@@ -38,10 +38,11 @@ try:
         "No thermal anomalies or fire detections found in Wayanad for this"
         " timeframe."
     )
+    # Subtle status indicator if completely clear
     folium.Marker(
         [11.6854, 76.1320],
-        popup="<b>Status:</b> No active anomalies detected in the last 24h.",
-        icon=folium.Icon(color="green", icon="info-sign"),
+        popup="<b>Status:</b> No active thermal anomalies in the last 24h.",
+        icon=folium.Icon(color="blue", icon="info-sign"),
     ).add_to(wayanad_map)
   else:
     print(f"\n[ALERT] Success! Found {len(df)} thermal anomaly point(s).")
@@ -51,22 +52,28 @@ try:
     for idx, row in df.iterrows():
       lat = row["latitude"]
       lon = row["longitude"]
-      # Use Fire Radiative Power (FRP) as intensity weight; default to 10 if missing
       weight = float(row["frp"]) if pd.notna(row["frp"]) else 10.0
       heat_data.append([lat, lon, weight])
 
-    # Add the HeatMap layer to the folium map
+    # Standard Classic HeatMap Gradient (Blue -> Cyan -> Lime -> Yellow -> Red)
     HeatMap(
         heat_data,
-        radius=18,
-        blur=12,
+        min_opacity=0.3,
+        radius=25,
+        blur=15,
         max_zoom=13,
-        gradient={0.4: "blue", 0.65: "lime", 0.9: "orange", 1.0: "red"},
+        gradient={
+            0.2: "blue",
+            0.4: "cyan",
+            0.6: "lime",
+            0.8: "yellow",
+            1.0: "red",
+        },
     ).add_to(wayanad_map)
 
   # Save as index.html
   wayanad_map.save("index.html")
-  print("Generated fresh thermal heat map: index.html")
+  print("Generated fresh blue-to-red heat map: index.html")
 
 except Exception as e:
   print(f"An error occurred: {e}")
