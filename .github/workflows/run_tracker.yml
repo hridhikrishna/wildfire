@@ -2,14 +2,15 @@ name: Wildfire Tracker Automation
 
 on:
   schedule:
-    # Runs every 3 hours (Cron syntax)
     - cron: '0 */3 * * *'
-  # Allows you to trigger it manually from the GitHub website too
   workflow_dispatch:
 
 jobs:
   run-tracker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required so the action can push the updated map back to your repo
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,10 +22,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pandas
+          pip install requests pandas folium
 
       - name: Run script
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
         run: |
           python tracker.py
+
+      - name: Commit and push updated map
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git add index.html
+          git commit -m "Auto-update wildfire map [skip ci]" || exit 0
+          git push
