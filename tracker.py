@@ -3,6 +3,8 @@ from io import StringIO
 import os
 import pandas as pd
 import requests
+import folium
+from folium.plugins import HeatMap
 
 # 1. Configuration & Security
 API_KEY = os.environ.get("NASA_API_KEY")
@@ -22,9 +24,7 @@ try:
   response.raise_for_status()
   df = pd.read_csv(StringIO(response.text))
 
-  # 2. Generate Interactive Map using Folium
-  import folium
-
+  # 2. Initialize Map over Wayanad
   wayanad_map = folium.Map(location=[11.6854, 76.1320], zoom_start=11)
 
   folium.TileLayer(
@@ -45,28 +45,28 @@ try:
     ).add_to(wayanad_map)
   else:
     print(f"\n[ALERT] Success! Found {len(df)} thermal anomaly point(s).")
-    for idx, row in df.iterrows():
-      color = "red" if row.get("frp", 0) > 50 else "orange"
-      popup_text = f"""
-                <b>Thermal Anomaly Detected</b><br>
-                <b>Confidence:</b> {str(row['confidence']).upper()}<br>
-                <b>FRP (Intensity):</b> {row['frp']} MW<br>
-                <b>Time (UTC):</b> {row['acq_date']} {row['acq_time']}<br>
-                <b>Coordinates:</b> {row['latitude']}, {row['longitude']}
-            """
-      folium.CircleMarker(
-          location=[row["latitude"], row["longitude"]],
-          radius=9,
-          popup=folium.Popup(popup_text, max_width=300),
-          color=color,
-          fill=True,
-          fill_color=color,
-          fill_opacity=0.7,
-      ).add_to(wayanad_map)
 
-  # Save the map as index.html
+    # 3. Build Heat Data Array [latitude, longitude, intensity_weight]
+    heat_data = []
+    for idx, row in df.iterrows():
+      lat = row["latitude"]
+      lon = row["longitude"]
+      # Use Fire Radiative Power (FRP) as intensity weight; default to 10 if missing
+      weight = float(row["frp"]) if pd.notna(row["frp"]) else 10.0
+      heat_data.append([lat, lon, weight])
+
+    # Add the HeatMap layer to the folium map
+    HeatMap(
+        heat_data,
+        radius=18,
+        blur=12,
+        max_zoom=13,
+        gradient={0.4: "blue", 0.65: "lime", 0.9: "orange", 1.0: "red"},
+    ).add_to(wayanad_map)
+
+  # Save as index.html
   wayanad_map.save("index.html")
-  print("Generated fresh interactive map: index.html")
+  print("Generated fresh thermal heat map: index.html")
 
 except Exception as e:
   print(f"An error occurred: {e}")
