@@ -36,7 +36,8 @@ jobs:
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.io"
             git add index.html
-            git commit -m "Auto-update wildfire map [skip ci]"
+            git commit -m "Auto-update wildfire map [skip ci]" || echo "No changes to commit"
+            git pull origin main --rebase || echo "Rebase not needed"
             git push
           else
             echo "index.html not found, skipping commit."
